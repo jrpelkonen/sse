@@ -125,7 +125,7 @@ var headers = map[string]string{
 	"Content-Type":  "text/event-stream",
 }
 
-func (server *Handler) Handle(writer http.ResponseWriter, r *http.Request) {
+func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 	server.withRequests(func(requests []InflightRequest) []InflightRequest {
 		return append(requests, InflightRequest{writer: writer, request: r})
 	})

@@ -131,7 +131,7 @@ func TestHandler(t *testing.T) {
 		}
 
 		rr := httptest.NewRecorder()
-		handler.Handle(rr, req)
+		handler.ServeHTTP(rr, req)
 		return cancel, rr
 	}
 
