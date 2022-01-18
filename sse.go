@@ -123,7 +123,7 @@ func (handler *Handler) withRequests(fn func(requests []InflightRequest) []Infli
 var headers = map[string]string{
 	"Cache-Control": "no-cache",
 	"Content-Type":  "text/event-stream",
-	"Connection":    "keep-alive",
+	"Connection":    "Keep-Alive",
 }
 
 func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
@@ -133,6 +133,7 @@ func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		<-r.Context().Done()
+		writer.Write([]byte("bye\r\n"))
 		server.withRequests(func(requests []InflightRequest) []InflightRequest {
 			for i, req := range requests {
 				if req.request == r {
