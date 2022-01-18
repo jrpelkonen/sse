@@ -123,6 +123,7 @@ func (handler *Handler) withRequests(fn func(requests []InflightRequest) []Infli
 var headers = map[string]string{
 	"Cache-Control": "no-cache",
 	"Content-Type":  "text/event-stream",
+	"Connection":    "keep-alive",
 }
 
 func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
