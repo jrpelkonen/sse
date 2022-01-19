@@ -2,6 +2,7 @@ package sse
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -121,35 +122,31 @@ func (handler *Handler) withRequests(fn func(requests []InflightRequest) []Infli
 }
 
 var headers = map[string]string{
-	"Cache-Control": "no-cache",
-	"Content-Type":  "text/event-stream",
-	"Connection":    "Keep-Alive",
+	"Cache-Control":     "no-cache",
+	"Content-Type":      "text/event-stream",
+	"Connection":        "keep-alive",
+	"Transfer-Encoding": "identity",
 }
 
 func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 	server.withRequests(func(requests []InflightRequest) []InflightRequest {
 		return append(requests, InflightRequest{writer: writer, request: r})
 	})
-
-	go func() {
-		<-r.Context().Done()
-		writer.Write([]byte("bye\r\n"))
-		server.withRequests(func(requests []InflightRequest) []InflightRequest {
-			for i, req := range requests {
-				if req.request == r {
-					requests = append(requests[:i], requests[i+1:]...)
-					break
-				}
-			}
-			return requests
-		})
-
-	}()
 	for name, value := range headers {
 		writer.Header().Add(name, value)
 	}
-
-	writer.Write([]byte{})
+	fmt.Printf("%v\n", r.Response)
+	writer.WriteHeader(200)
+	<-r.Context().Done()
+	server.withRequests(func(requests []InflightRequest) []InflightRequest {
+		for i, req := range requests {
+			if req.request == r {
+				requests = append(requests[:i], requests[i+1:]...)
+				break
+			}
+		}
+		return requests
+	})
 }
 
 func (server *Handler) AddDataEvent(data string) {
