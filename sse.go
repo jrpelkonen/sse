@@ -2,7 +2,6 @@ package sse
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -130,13 +129,12 @@ var headers = map[string]string{
 
 func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 	server.withRequests(func(requests []InflightRequest) []InflightRequest {
+		for name, value := range headers {
+			writer.Header().Add(name, value)
+		}
+		writer.WriteHeader(200)
 		return append(requests, InflightRequest{writer: writer, request: r})
 	})
-	for name, value := range headers {
-		writer.Header().Add(name, value)
-	}
-	fmt.Printf("%v\n", r.Response)
-	writer.WriteHeader(200)
 	<-r.Context().Done()
 	server.withRequests(func(requests []InflightRequest) []InflightRequest {
 		for i, req := range requests {
