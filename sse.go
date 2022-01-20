@@ -108,10 +108,11 @@ type InflightRequest struct {
 }
 
 type Handler struct {
-	mu        sync.Mutex
-	requests  []InflightRequest
-	events    chan<- SSE
-	event_ack <-chan bool
+	mu              sync.Mutex
+	requests        []InflightRequest
+	events          chan<- SSE
+	mostRecentEvent *SSE
+	eventAck        <-chan bool
 }
 
 func (handler *Handler) withRequests(fn func(requests []InflightRequest) []InflightRequest) {
@@ -133,6 +134,9 @@ func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 			writer.Header().Add(name, value)
 		}
 		writer.WriteHeader(200)
+		if server.mostRecentEvent != nil {
+			writer.Write([]byte(server.mostRecentEvent.String()))
+		}
 		return append(requests, InflightRequest{writer: writer, request: r})
 	})
 	<-r.Context().Done()
@@ -153,13 +157,13 @@ func (server *Handler) AddDataEvent(data string) {
 
 func (server *Handler) AddEvent(event SSE) {
 	server.events <- event
-	<-server.event_ack
+	<-server.eventAck
 }
 
 func NewHandler() *Handler {
 	events := make(chan SSE)
-	event_ack := make(chan bool)
-	server := Handler{requests: make([]InflightRequest, 0), events: events, event_ack: event_ack}
+	eventAck := make(chan bool)
+	server := Handler{requests: make([]InflightRequest, 0), events: events, eventAck: eventAck}
 
 	go func() {
 		handleEvent := func(event SSE) {
@@ -167,7 +171,7 @@ func NewHandler() *Handler {
 				var wg sync.WaitGroup
 				defer wg.Wait()
 				buf := event.String()
-
+				server.mostRecentEvent = &event
 				for _, req := range requests {
 					wg.Add(1)
 					go func(wg *sync.WaitGroup, w io.Writer) {
@@ -187,7 +191,7 @@ func NewHandler() *Handler {
 			event := <-events
 
 			handleEvent(event)
-			event_ack <- true
+			eventAck <- true
 		}
 	}()
 	return &server
