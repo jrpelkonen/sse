@@ -136,6 +136,9 @@ func (server *Handler) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 		writer.WriteHeader(200)
 		if server.mostRecentEvent != nil {
 			writer.Write([]byte(server.mostRecentEvent.String()))
+			if f, ok := writer.(http.Flusher); ok {
+				f.Flush()
+			}
 		}
 		return append(requests, InflightRequest{writer: writer, request: r})
 	})
