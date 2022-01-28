@@ -13,10 +13,10 @@ import (
 // data structures
 
 type SSE struct {
-	event string
-	data  string
-	id    string
-	retry uint64
+	Event string
+	Data  string
+	Id    string
+	Retry uint64
 }
 
 func condWrite(sb *strings.Builder, name string, value string) {
@@ -30,11 +30,11 @@ func condWrite(sb *strings.Builder, name string, value string) {
 
 func (sse SSE) String() string {
 	var sb strings.Builder
-	condWrite(&sb, "event", sse.event)
-	condWrite(&sb, "data", sse.data)
-	condWrite(&sb, "id", sse.id)
-	if sse.retry > 0 {
-		condWrite(&sb, "retry", strconv.FormatUint(sse.retry, 10))
+	condWrite(&sb, "event", sse.Event)
+	condWrite(&sb, "data", sse.Data)
+	condWrite(&sb, "id", sse.Id)
+	if sse.Retry > 0 {
+		condWrite(&sb, "retry", strconv.FormatUint(sse.Retry, 10))
 	}
 	sb.WriteString("\r\n")
 	return sb.String()
@@ -79,15 +79,15 @@ func scanEvent(scanner *bufio.Scanner) *SSE {
 			if len(keyValue) == 2 {
 				switch keyValue[0] {
 				case "event":
-					event.event = keyValue[1]
+					event.Event = keyValue[1]
 				case "data":
-					event.data = keyValue[1]
+					event.Data = keyValue[1]
 				case "id":
-					event.id = keyValue[1]
+					event.Id = keyValue[1]
 				case "retry":
 					retry, err := strconv.ParseUint(keyValue[1], 10, 64)
 					if err == nil {
-						event.retry = retry
+						event.Retry = retry
 					}
 				}
 			}
@@ -97,7 +97,7 @@ func scanEvent(scanner *bufio.Scanner) *SSE {
 }
 
 func NewDataEvent(data string) SSE {
-	return SSE{data: data}
+	return SSE{Data: data}
 }
 
 // server
