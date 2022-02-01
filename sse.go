@@ -63,6 +63,14 @@ func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return start, nil, nil
 }
 
+func cut(s string, a rune) (string, string) {
+	index := strings.IndexRune(s, a)
+	if index == -1 {
+		return s, ""
+	}
+	return s[:index], s[index+1:]
+}
+
 func scanEvent(scanner *bufio.Scanner) *SSE {
 	var event *SSE
 	for scanner.Scan() {
@@ -75,17 +83,17 @@ func scanEvent(scanner *bufio.Scanner) *SSE {
 			if event == nil {
 				event = &SSE{}
 			}
-			keyValue := strings.Split(line, ":")
-			if len(keyValue) == 2 {
-				switch keyValue[0] {
+			key, value := cut(line, ':')
+			if value != "" {
+				switch key {
 				case "event":
-					event.Event = keyValue[1]
+					event.Event = value
 				case "data":
-					event.Data = keyValue[1]
+					event.Data = value
 				case "id":
-					event.Id = keyValue[1]
+					event.Id = value
 				case "retry":
-					retry, err := strconv.ParseUint(keyValue[1], 10, 64)
+					retry, err := strconv.ParseUint(value, 10, 64)
 					if err == nil {
 						event.Retry = retry
 					}
