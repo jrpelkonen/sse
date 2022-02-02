@@ -38,7 +38,7 @@ func TestScanLines(t *testing.T) {
 
 func TestScanEvent(t *testing.T) {
 	inputs := []string{"event:foo", "data:bar", ":", "", "", "id:1234", "retry:3412"}
-	expectedEvents := []SSE{{event: "foo", data: "bar"}, {id: "1234", retry: 3412}}
+	expectedEvents := []SSE{{Event: "foo", Data: "bar"}, {Id: "1234", Retry: 3412}}
 	input := strings.Join(inputs, "\r\n")
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	scanner.Split(scanLines)
@@ -57,7 +57,7 @@ func TestScanEvent(t *testing.T) {
 
 func TestSSEToString(t *testing.T) {
 	expectedStrings := []string{"event:foo\r\ndata:bar\r\n\r\n", "\r\n", "id:1234\r\nretry:3412\r\n\r\n"}
-	events := []SSE{{event: "foo", data: "bar"}, {}, {id: "1234", retry: 3412}}
+	events := []SSE{{Event: "foo", Data: "bar"}, {}, {Id: "1234", Retry: 3412}}
 	for i, expectedString := range expectedStrings {
 		actualString := events[i].String()
 		if expectedString != actualString {
@@ -99,7 +99,7 @@ func (sr *SlowReader) Close() {
 
 func TestToEventChan(t *testing.T) {
 	inputs := []string{"event:foo", "data:bar", ":", "", "", "id:1234", "retry:3412"}
-	expectedEvents := []SSE{{event: "foo", data: "bar"}, {id: "1234", retry: 3412}}
+	expectedEvents := []SSE{{Event: "foo", Data: "bar"}, {Id: "1234", Retry: 3412}}
 	var buffer SlowReader
 	go func() {
 		for _, line := range inputs {
@@ -162,7 +162,7 @@ func TestHandler(t *testing.T) {
 		t.Fatalf(`length = %q, expected %q`, len(messages1), 1)
 	}
 
-	if messages1[0].data != "test" {
+	if messages1[0].Data != "test" {
 		t.Fatalf(`length = %q, expected %q`, len(messages1), 1)
 	}
 	if len(messages2) != 2 {
